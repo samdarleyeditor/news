@@ -19,7 +19,6 @@ def download_and_upload_news():
     blob = bucket.blob(destination_blob_name)
 
     blob.upload_from_string(response.content, content_type="audio/mpeg")
-    blob.make_public()
 
     return f"Uploaded news file to: {blob.public_url}", 200
 
