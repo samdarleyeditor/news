@@ -1,4 +1,5 @@
 import logging
+import hashlib
 from flask import Flask
 import requests
 from google.cloud import storage
@@ -19,21 +20,23 @@ def download_and_upload_news():
             logging.error(f"Failed to download news file: {response.status_code}")
             return f"Failed to download Sky News MP3: {response.status_code}", 500
 
-        logging.info(f"Downloaded Sky MP3: {len(response.content)} bytes")
+        # Compute MD5 for verification
+        file_hash = hashlib.md5(response.content).hexdigest()
+        logging.info(f"Downloaded Sky MP3: {len(response.content)} bytes, MD5: {file_hash}")
 
         # Upload to GCS
         client = storage.Client()
         bucket = client.bucket(bucket_name)
         blob = bucket.blob(destination_blob_name)
 
-        # Prevent CDN caching
+        # Prevent caching
         blob.cache_control = "no-cache"
         blob.upload_from_string(response.content, content_type="audio/mpeg")
         blob.patch()  # Apply metadata immediately
 
-        logging.info("File uploaded successfully to GCS")
+        logging.info(f"File uploaded successfully to GCS: {destination_blob_name}")
 
-        return f"Uploaded news file to: https://storage.googleapis.com/{bucket_name}/{destination_blob_name}", 200
+        return f"Uploaded news file to: https://storage.googleapis.com/{bucket_name}/{destination_blob_name} (MD5: {file_hash})", 200
 
     except Exception as e:
         logging.exception("Error in download_and_upload_news:")
@@ -44,4 +47,3 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=port)
-
