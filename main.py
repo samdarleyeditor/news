@@ -10,7 +10,7 @@ def download_and_upload_news():
     try:
         news_url = "https://video.news.sky.com/snr/news/snrnews.mp3"
         bucket_name = "blockytime"
-        destination_blob_name = "RADIO STATION/News/snrnews.mp3"
+        destination_blob_name = "RADIO STATION/News/snrnews_test.mp3"
 
         response = requests.get(news_url, stream=True)
         if response.status_code != 200:
